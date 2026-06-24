@@ -1,0 +1,5 @@
+# 中文注释：忽略 SwiftPM 本地构建产物。
+.build/
+
+# 中文注释：忽略 brainstorming 可视化讨论产生的本地临时文件。
+.superpowers/
