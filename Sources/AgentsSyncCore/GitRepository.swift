@@ -1,7 +1,14 @@
 import Foundation
 
+public protocol GitWorkingCopy {
+    func status() throws -> String
+    func pull() throws -> String
+    func commit(message: String) throws -> String
+    func push() throws -> String
+}
+
 // 中文注释：GitRepository 只封装本机 git 命令，不处理平台账号登录。
-public struct GitRepository {
+public struct GitRepository: GitWorkingCopy {
     private let repositoryURL: URL
 
     public init(repositoryURL: URL) {

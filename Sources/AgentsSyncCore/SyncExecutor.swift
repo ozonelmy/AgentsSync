@@ -1,7 +1,11 @@
 import Foundation
 
+public protocol SkillSyncExecuting {
+    func execute(operations: [SyncOperation], directoriesByID: [String: ToolDirectory]) throws -> SyncExecutionResult
+}
+
 // 中文注释：SyncExecutor 执行目录级复制，并在覆盖前调用 BackupStore。
-public struct SyncExecutor {
+public struct SyncExecutor: SkillSyncExecuting {
     private let fileManager: FileManager
     private let backupStore: BackupStore
 
@@ -10,7 +14,9 @@ public struct SyncExecutor {
         self.backupStore = backupStore
     }
 
-    public func execute(operations: [SyncOperation], directoriesByID: [String: ToolDirectory]) throws {
+    @discardableResult
+    public func execute(operations: [SyncOperation], directoriesByID: [String: ToolDirectory]) throws -> SyncExecutionResult {
+        var backups: [BackupSnapshot] = []
         for operation in operations {
             switch operation {
             case .copySkill(let skillName, let sourceDirectoryID, let targetDirectoryID):
@@ -29,11 +35,13 @@ public struct SyncExecutor {
 
                 try fileManager.createDirectory(at: targetDirectory.skillsURL, withIntermediateDirectories: true)
                 if fileManager.fileExists(atPath: targetSkillURL.path) {
-                    _ = try backupStore.backupSkill(named: skillName, from: targetSkillURL)
+                    let backup = try backupStore.backupSkill(named: skillName, from: targetSkillURL)
+                    backups.append(backup)
                     try fileManager.removeItem(at: targetSkillURL)
                 }
                 try fileManager.copyItem(at: sourceSkillURL, to: targetSkillURL)
             }
         }
+        return SyncExecutionResult(backups: backups)
     }
 }
